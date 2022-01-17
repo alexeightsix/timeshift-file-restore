@@ -1,0 +1,14 @@
+{
+  "name": "timeshift-file-restore",
+  "version": "1.0.0",
+  "description": "Restore a file from a timeshift backup",
+  "main": "tsr",
+  "dependencies": {
+    "prompts": "^2.4.2"
+  },
+  "scripts": {
+    "init": "npm install && npm link",
+    "symlink": "sudo ln -s ./tsr /usr/local/bin"
+  },
+  "author": "Alex Latour"
+}
