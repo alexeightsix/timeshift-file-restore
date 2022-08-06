@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+if [ "$EUID" -ne 0 ]
+  then echo "Please run as root"
+  exit 1
+fi
+
+src=$(pwd)/$1
+
+exists=$(find $src | wc -l)
+tsr_tmp="/tmp/tsr_tmp/"
+timestamp=$(date +%s)
+
+uuid=$(cat /etc/timeshift/timeshift.json | jq '.backup_device_uuid')
+dev=$(blkid | grep $uuid | awk '{print $1}' | sed 's/.$//')
+
+mkdir -p "/run/timeshift/$timestamp/backup"
+mount $dev "/run/timeshift/$timestamp/backup"
+
+file=$(find /run/timeshift/*/backup/timeshift/snapshots/*/*/$src/ -maxdepth 0 | sort -b | fzf)
+
+mkdir -p $tsr_tmp
+
+if [ -n "$exists" ]; then
+  mkdir -p $tsr_tmp/$timestamp
+  mv -f $src $tsr_tmp/$timestamp/
+fi
+
+cp -rp $file $src
+
+umount $dev
