@@ -6,8 +6,10 @@ fi
 
 src=$(pwd)/$1
 
-exists=$(find $src | wc -l)
+exists=$(find $src 2> /dev/null | wc -l)
+
 tsr_tmp="/tmp/tsr_tmp/"
+
 timestamp=$(date +%s)
 
 uuid=$(cat /etc/timeshift/timeshift.json | jq '.backup_device_uuid')
@@ -16,15 +18,20 @@ dev=$(blkid | grep $uuid | awk '{print $1}' | sed 's/.$//')
 mkdir -p "/run/timeshift/$timestamp/backup"
 mount $dev "/run/timeshift/$timestamp/backup"
 
-file=$(find /run/timeshift/*/backup/timeshift/snapshots/*/*/$src/ -maxdepth 0 | sort -b | fzf)
+file=$(find /run/timeshift/*/backup/timeshift/snapshots/*/*$src -maxdepth 0 | sort -b | fzf)
 
-mkdir -p $tsr_tmp
-
-if [ -n "$exists" ]; then
-  mkdir -p $tsr_tmp/$timestamp
-  mv -f $src $tsr_tmp/$timestamp/
+if [ -z "$file" ] 
+  then exit 1
 fi
 
-cp -rp $file $src
+mkdir -p $tsr_tmp/$timestamp
+
+if [ "$exists" = 1 ] 
+   then cp -R -a -p -u $src $tsr_tmp/$timestamp/ && cp -R -u -p $file $src && stat $src
+fi
+
+if [ "$exists" = 0 ] 
+   then cp -R -u -p $file $src
+fi
 
 umount $dev
